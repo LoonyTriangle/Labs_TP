@@ -21,21 +21,21 @@ jobs:
           echo "🔍 Проверка структуры проекта..."
           MISSING=0
 
-          if [ ! -f "python/hello.py" ]; then
-            echo "❌ Ошибка: Файл python/hello.py не найден"
+          if [ ! -f "lab1-pin25_Titov/python/hello.py" ]; then
+            echo "❌ Ошибка: Файл lab1-pin25_Titov/python/hello.py не найден"
             MISSING=1
           fi
 
-          if [ ! -f "go/main.go" ]; then
-            echo "❌ Ошибка: Файл go/main.go не найден"
+          if [ ! -f "lab1-pin25_Titov/go/main.go" ]; then
+            echo "❌ Ошибка: Файл lab1-pin25_Titov/go/main.go не найден"
             MISSING=1
           fi
 
-          if [ ! -f ".gitignore" ]; then
+          if [ ! -f "lab1-pin25_Titov/.gitignore" ]; then
             echo "⚠️ Предупреждение: .gitignore не найден"
           fi
 
-          if [ ! -f "README.md" ]; then
+          if [ ! -f "lab1-pin25_Titov/README.md" ]; then
             echo "⚠️ Предупреждение: README.md не найден"
           fi
 
@@ -61,7 +61,7 @@ jobs:
       - name: Проверка Python кода
         run: |
           echo "🔍 Проверка Python кода..."
-          flake8 python/hello.py --max-line-length=120 --show-source
+          flake8 lab1-pin25_Titov/python/hello.py --max-line-length=120 --show-source
 
   # ============================================
   # 3. Линтинг Go кода
@@ -75,7 +75,7 @@ jobs:
         with:
           go-version: "1.22"
       - name: Проверка Go кода
-        working-directory: go
+        working-directory: lab1-pin25_Titov/go
         run: |
           echo "🔍 Проверка Go кода..."
           go vet ./...
@@ -103,8 +103,8 @@ jobs:
       - name: Запуск тестов Python
         run: |
           echo "🔍 Запуск тестов Python..."
-          if [ -d "test" ] && [ "$(ls -A test/*.py 2>/dev/null)" ]; then
-            pytest test/ -v --tb=short
+          if [ -d "lab1-pin25_Titov/test" ] && [ "$(ls -A lab1-pin25_Titov/test/*.py 2>/dev/null)" ]; then
+            pytest lab1-pin25_Titov/test/ -v --tb=short
           else
             echo "⚠️ Тесты не найдены, пропускаем..."
           fi
@@ -121,7 +121,7 @@ jobs:
         with:
           go-version: "1.22"
       - name: Сборка Go программы
-        working-directory: go
+        working-directory: lab1-pin25_Titov/go
         run: |
           echo "🔍 Сборка Go программы..."
           go build -o hello main.go
@@ -140,7 +140,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Проверка синтаксиса Python
-        working-directory: python
+        working-directory: lab1-pin25_Titov/python
         run: |
           echo "🔍 Проверка синтаксиса Python..."
           python -m py_compile hello.py
