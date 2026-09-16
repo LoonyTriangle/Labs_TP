@@ -63,10 +63,8 @@ func main() {
 	}
 
 	start := time.Now()
-
 	message := greet(name)
 	color := getColor(name)
-
 	elapsed := time.Since(start)
 
 	fmt.Printf("%s%s%s\n", color, message, colorReset)
