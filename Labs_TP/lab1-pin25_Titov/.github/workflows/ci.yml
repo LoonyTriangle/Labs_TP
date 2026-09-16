@@ -1,0 +1,147 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  GO_VERSION: "1.22"
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ============================================
+  # 1. Проверка наличия обязательных файлов
+  # ============================================
+  check-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Проверка структуры проекта
+        run: |
+          echo "🔍 Проверка структуры проекта..."
+          MISSING=0
+
+          if [ ! -f "python/hello.py" ]; then
+            echo "❌ Ошибка: Файл python/hello.py не найден"
+            MISSING=1
+          fi
+
+          if [ ! -f "go/main.go" ]; then
+            echo "❌ Ошибка: Файл go/main.go не найден"
+            MISSING=1
+          fi
+
+          if [ ! -f ".gitignore" ]; then
+            echo "⚠️ Предупреждение: .gitignore не найден"
+          fi
+
+          if [ ! -f "README.md" ]; then
+            echo "⚠️ Предупреждение: README.md не найден"
+          fi
+
+          if [ $MISSING -eq 1 ]; then
+            echo "❌ Проверка не пройдена!"
+            exit 1
+          fi
+
+          echo "✅ Все обязательные файлы найдены!"
+
+  # ============================================
+  # 2. Линтинг Python кода
+  # ============================================
+  lint-python:
+    runs-on: ubuntu-latest
+    needs: check-files
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install flake8
+      - name: Проверка Python кода
+        run: |
+          echo "🔍 Проверка Python кода..."
+          flake8 python/hello.py --max-line-length=120 --show-source
+
+  # ============================================
+  # 3. Линтинг Go кода
+  # ============================================
+  lint-go:
+    runs-on: ubuntu-latest
+    needs: check-files
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Проверка Go кода
+        working-directory: go
+        run: |
+          echo "🔍 Проверка Go кода..."
+          go vet ./...
+          if [ -n "$(gofmt -l .)" ]; then
+            echo "❌ Ошибка: файлы не отформатированы через gofmt"
+            echo "Нужно отформатировать:"
+            gofmt -l .
+            exit 1
+          fi
+          echo "✅ Go код проверен"
+
+  # ============================================
+  # 4. Тестирование Python (если есть тесты)
+  # ============================================
+  test-python:
+    runs-on: ubuntu-latest
+    needs: lint-python
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pytest
+      - name: Запуск тестов Python
+        run: |
+          echo "🔍 Запуск тестов Python..."
+          if [ -d "test" ] && [ "$(ls -A test/*.py 2>/dev/null)" ]; then
+            pytest test/ -v --tb=short
+          else
+            echo "⚠️ Тесты не найдены, пропускаем..."
+          fi
+
+  # ============================================
+  # 5. Проверка сборки Go
+  # ============================================
+  build-go:
+    runs-on: ubuntu-latest
+    needs: lint-go
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Сборка Go программы
+        working-directory: go
+        run: |
+          echo "🔍 Сборка Go программы..."
+          go build -o hello main.go
+          echo "✅ Go программа собрана успешно"
+          ./hello < /dev/null
+
+  # ============================================
+  # 6. Проверка запуска Python
+  # ============================================
+  run-python:
+    runs-on: ubuntu-latest
+    needs: lint-python
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Проверка синтаксиса Python
+        working-directory: python
+        run: |
+          echo "🔍 Проверка синтаксиса Python..."
+          python -m py_compile hello.py
+          echo "✅ Python синтаксис корректен"

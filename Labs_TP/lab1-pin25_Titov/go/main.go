@@ -62,12 +62,13 @@ func main() {
 		name = "World"
 	}
 
-	// Замеряем только выполнение (ввод имени уже позади)
 	start := time.Now()
+
 	message := greet(name)
 	color := getColor(name)
-	elapsedMs := float64(time.Since(start).Nanoseconds()) / 1e6
+
+	elapsed := time.Since(start)
 
 	fmt.Printf("%s%s%s\n", color, message, colorReset)
-	fmt.Printf("[Go] Execution time: %.4f ms\n", elapsedMs)
+	fmt.Printf("[Go] Execution time: %.4f ms\n", float64(elapsed.Nanoseconds())/1e6)
 }
